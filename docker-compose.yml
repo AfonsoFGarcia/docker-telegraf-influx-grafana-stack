@@ -1,34 +1,39 @@
 version: '3.6'
 services:
   telegraf:
-    image: library/telegraf:1.14-alpine
+    image: library/telegraf:latest
     volumes:
-    - ./telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - ./telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - speedtest_data:/usr/speedtest
     depends_on:
       - influxdb
     links:
       - influxdb
-    ports:
-    - '127.0.0.1:8125:8125/udp'
+  
+  speedtest:
+    build: speedtest/.
+    volumes: 
+      - speedtest_data:/usr/speedtest
+    depends_on: 
+      - influxdb
 
   influxdb:
-    image: influxdb:1.8-alpine
+    image: influxdb:latest
     env_file: configuration.env
     ports:
-      - '127.0.0.1:8086:8086'
+      - 8086:8086
     volumes:
-      - ./:/imports
       - influxdb_data:/var/lib/influxdb
 
   grafana:
-    image: grafana/grafana:6.7.0
+    image: grafana/grafana:latest
     depends_on:
       - influxdb
     env_file: configuration.env
     links:
       - influxdb
     ports:
-      - '127.0.0.1:3000:3000'
+      - 3000:3000
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning/:/etc/grafana/provisioning/
@@ -37,3 +42,4 @@ services:
 volumes:
   grafana_data: {}
   influxdb_data: {}
+  speedtest_data: {}
